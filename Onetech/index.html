@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MTA Consultant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: white;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 3em;
+            margin-bottom: 40px;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .control-panel {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .template-selector {
+            margin-bottom: 30px;
+        }
+
+        .template-selector label {
+            display: block;
+            font-size: 1.2em;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .template-selector select {
+            width: 100%;
+            max-width: 400px;
+            padding: 15px;
+            font-size: 1.1em;
+            border-radius: 10px;
+            border: 2px solid white;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .template-selector select:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .template-selector select option {
+            background: #764ba2;
+            color: white;
+        }
+
+        .mic-button {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background-color: #000;
+            border: 5px solid white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 30px auto;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .mic-button:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .mic-button:active:not(:disabled) {
+            transform: scale(0.95);
+        }
+
+        .mic-button:disabled {
+            background-color: #666;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .mic-button.recording {
+            background-color: #e74c3c;
+            animation: pulse 1.5s infinite;
+        }
+
+        .mic-button.processing {
+            background-color: #f39c12;
+            animation: rotate 1s linear infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7);
+            }
+            50% {
+                box-shadow: 0 0 0 20px rgba(231, 76, 60, 0);
+            }
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .mic-icon {
+            width: 60px;
+            height: 60px;
+            fill: white;
+        }
+
+        .status-text {
+            font-size: 1.2em;
+            margin-top: 20px;
+            min-height: 30px;
+            font-weight: 500;
+        }
+
+        .results-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .result-box {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .result-box h2 {
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+            padding-bottom: 10px;
+        }
+
+        .result-content {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 20px;
+            min-height: 200px;
+            max-height: 500px;
+            overflow-y: auto;
+            font-size: 0.95em;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .error {
+            color: #e74c3c;
+            background: rgba(231, 76, 60, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .copy-button {
+            background: rgba(255, 255, 255, 0.3);
+            border: 2px solid white;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 15px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+
+        .copy-button:hover {
+            background: rgba(255, 255, 255, 0.5);
+            transform: scale(1.05);
+        }
+
+        @media (max-width: 768px) {
+            .results-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>MTA Consultant</h1>
+
+        <div class="control-panel">
+            <div class="template-selector">
+                <label for="templateSelect">Select Report Template:</label>
+                <select id="templateSelect">
+                    <option value="">-- Choose a template --</option>
+                </select>
+            </div>
+
+            <button class="mic-button" id="micButton" disabled>
+                <svg class="mic-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                    <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                </svg>
+            </button>
+
+            <div class="status-text" id="statusText">Select a template to begin</div>
+            <div class="error hidden" id="error"></div>
+        </div>
+
+        <div class="results-container hidden" id="resultsContainer">
+            <div class="result-box">
+                <h2>Transcribed Conversation</h2>
+                <div class="result-content" id="transcriptionText"></div>
+                <button class="copy-button" onclick="copyToClipboard('transcriptionText')">Copy Transcript</button>
+            </div>
+
+            <div class="result-box">
+                <h2 id="reportTitle">Medical Report</h2>
+                <div class="result-content" id="reportText"></div>
+                <button class="copy-button" onclick="copyToClipboard('reportText')">Copy Report</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const micButton = document.getElementById('micButton');
+        const statusText = document.getElementById('statusText');
+        const templateSelect = document.getElementById('templateSelect');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const transcriptionText = document.getElementById('transcriptionText');
+        const reportText = document.getElementById('reportText');
+        const reportTitle = document.getElementById('reportTitle');
+        const errorDiv = document.getElementById('error');
+
+        let mediaRecorder;
+        let audioChunks = [];
+        let isRecording = false;
+        let templates = {};
+
+        const API_URL = 'http://localhost:8000/generate-report';
+        const TEMPLATES_URL = 'http://localhost:8000/templates';
+
+        // Load templates on page load
+        async function loadTemplates() {
+            try {
+                const response = await fetch(TEMPLATES_URL);
+                const data = await response.json();
+                templates = data.templates;
+
+                // Populate dropdown
+                for (const [key, value] of Object.entries(templates)) {
+                    const option = document.createElement('option');
+                    option.value = key;
+                    option.textContent = value.name;
+                    templateSelect.appendChild(option);
+                }
+            } catch (error) {
+                console.error('Error loading templates:', error);
+                showError('Failed to load templates. Please refresh the page.');
+            }
+        }
+
+        // Enable mic button when template is selected
+        templateSelect.addEventListener('change', () => {
+            if (templateSelect.value) {
+                micButton.disabled = false;
+                statusText.textContent = 'Press the button to record doctor-patient conversation';
+            } else {
+                micButton.disabled = true;
+                statusText.textContent = 'Select a template to begin';
+            }
+        });
+
+        micButton.addEventListener('click', async () => {
+            if (!isRecording) {
+                startRecording();
+            } else {
+                stopRecording();
+            }
+        });
+
+        async function startRecording() {
+            try {
+                resultsContainer.classList.add('hidden');
+                errorDiv.classList.add('hidden');
+
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+
+                mediaRecorder.ondataavailable = (event) => {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = async () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                    await sendAudioToAPI(audioBlob);
+                };
+
+                mediaRecorder.start();
+                isRecording = true;
+
+                micButton.classList.add('recording');
+                statusText.textContent = 'Recording conversation... Click again to stop';
+
+            } catch (error) {
+                console.error('Error accessing microphone:', error);
+                showError('Microphone access denied. Please allow microphone access.');
+            }
+        }
+
+        function stopRecording() {
+            if (mediaRecorder && isRecording) {
+                mediaRecorder.stop();
+                mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                isRecording = false;
+
+                micButton.classList.remove('recording');
+                micButton.classList.add('processing');
+                statusText.textContent = 'Processing conversation and generating report...';
+            }
+        }
+
+        async function sendAudioToAPI(audioBlob) {
+            try {
+                const reader = new FileReader();
+                reader.readAsDataURL(audioBlob);
+
+                reader.onloadend = async () => {
+                    const base64Audio = reader.result.split(',')[1];
+
+                    const response = await fetch(API_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            audio_base64: base64Audio,
+                            template_type: templateSelect.value
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`API error: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+
+                    // Update report title based on template
+                    reportTitle.textContent = templates[templateSelect.value].name;
+
+                    // Display results
+                    transcriptionText.textContent = result.transcribed_text;
+                    reportText.textContent = result.medical_report;
+                    resultsContainer.classList.remove('hidden');
+
+                    micButton.classList.remove('processing');
+                    statusText.textContent = 'Report generated! Press the button to record another conversation';
+                };
+
+            } catch (error) {
+                console.error('Error:', error);
+                showError('Error processing your request. Please try again.');
+                micButton.classList.remove('processing');
+                statusText.textContent = 'Press the button to record doctor-patient conversation';
+            }
+        }
+
+        function copyToClipboard(elementId) {
+            const text = document.getElementById(elementId).textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Copied to clipboard!');
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+            });
+        }
+
+        function showError(message) {
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
+        }
+
+        // Load templates when page loads
+        loadTemplates();
+    </script>
+</body>
+</html>
